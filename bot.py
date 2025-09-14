@@ -10,21 +10,15 @@ from telegram.ext import (
 )
 import re
 import random
-import pickle
-import cv2
-import numpy as np
-from PIL import Image
-import io
-import os
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
 
-TOKEN = '8082470677:AAHfzr8gihVzqsfnFJ6kQhWXjUAC-Fm5hEk'
+TOKEN = '8082470677:AAHfzr8gihVzqsfnFJ6kQhWXjUAC-Fm5hEk'  # Ganti dengan token bot Anda
 
 user_data = {}
-waiting_users = {'male': [], 'female': []}
+waiting_users = {'LAKIK': [], 'Girlss': []}
 active_chats = {}
 
 FORBIDDEN_WORDS = [
@@ -34,7 +28,7 @@ FORBIDDEN_WORDS = [
 ]
 
 NICKNAMES = [
-    'Beruang', 'Tupai', 'Kucing', 'Panda', 'Serigala', 'Elang', 'Singa', 'Harimau', 'Rusa',
+    'PatungKuda', 'GondangHuman', 'PelosokJurbel', 'SumbotBebas', 'BanjarsariTrail', 'Elang', 'Singa', 'Harimau', 'Rusa',
     'Rubah', 'Koala', 'Kelinci', 'Monyet', 'Bebek', 'Gajah', 'Kuda', 'Ular', 'Buaya', 'Babi',
     'Semut', 'Lebah', 'Ikan', 'Hiu', 'Paus', 'Lumba-lumba', 'Bintang', 'Bulan', 'Matahari',
     'Pelangi', 'Awan', 'Hujan', 'Angin', 'Petir', 'Salju', 'Gunung', 'Pantai', 'Laut', 'Sungai',
@@ -44,12 +38,16 @@ NICKNAMES = [
     'Pisang', 'Nanas', 'Anggur', 'Stroberi', 'Ceri', 'Jambu', 'Kelapa'
 ]
 
+def is_valid_undip_email(email):
+    pattern = r'^[a-zA-Z0-9._%+-]+@students\.undip\.ac\.id$'
+    return re.match(pattern, email) is not None
+
 def contains_forbidden_words(text: str) -> bool:
     pattern = r'\b(' + '|'.join(FORBIDDEN_WORDS) + r')\b'
     return re.search(pattern, text, re.IGNORECASE) is not None
 
 def get_new_nickname():
-    used_nicknames = {data['nickname'] for data in user_data.values()}
+    used_nicknames = {data['nickname'] for data in user_data.values() if 'nickname' in data}
     available_nicknames = [n for n in NICKNAMES if n not in used_nicknames]
     if not available_nicknames:
         return random.choice(NICKNAMES)
@@ -58,23 +56,54 @@ def get_new_nickname():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.message.from_user.id
     
-    if user_id in user_data:
+    if user_id in user_data and user_data[user_id].get('verified', False):
         if user_id in active_chats:
             await update.message.reply_text('Anda sudah dalam sesi chat. Kirim /skip untuk mencari pengguna baru atau /endchat untuk mengakhiri.')
             return
-        elif user_id in waiting_users.get(user_data[user_id]['gender'], []):
+        elif user_id in waiting_users.get(user_data[user_id].get('gender', ''), []):
             await update.message.reply_text('Anda sudah dalam antrian. Menunggu pengguna lain...')
             return
-
-    keyboard = [
-        [InlineKeyboardButton("Laki-laki", callback_data='male')],
-        [InlineKeyboardButton("Perempuan", callback_data='female')],
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
+        else:
+            keyboard = [
+                [InlineKeyboardButton("Laki-laki", callback_data='LAKIK')],
+                [InlineKeyboardButton("Perempuan", callback_data='Girlss')],
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await update.message.reply_text('Silakan pilih gender Anda untuk memulai.', reply_markup=reply_markup)
+            return
+    
     await update.message.reply_text(
-        'Selamat datang di bot chat anonim! Silakan pilih gender Anda untuk memulai.',
-        reply_markup=reply_markup
+        'Selamat datang di bot chat anonim UNDIP!\n\n'
+        'Untuk menggunakan layanan ini, Anda harus memiliki email students.undip.ac.id.\n'
+        'Silakan kirim alamat email students.undip.ac.id Anda untuk verifikasi.'
+    )
+
+async def handle_email(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = update.message.from_user.id
+    email = update.message.text.strip()
+    
+    if user_id in user_data and user_data[user_id].get('verified', False):
+        await update.message.reply_text('Anda sudah terverifikasi. Kirim /start untuk memulai chat.')
+        return
+    
+    if not is_valid_undip_email(email):
+        await update.message.reply_text(
+            'Format email tidak valid. Harap gunakan email students.undip.ac.id Anda.\n'
+            'Contoh: nama@students.undip.ac.id\n\n'
+            'Silakan kirim ulang email Anda:'
+        )
+        return
+    
+    # Verifikasi sederhana - hanya cek format email
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    
+    user_data[user_id]['verified'] = True
+    user_data[user_id]['email'] = email
+    
+    await update.message.reply_text(
+        'Verifikasi berhasil! Email Anda telah divalidasi.\n\n'
+        'Kirim /start untuk memulai chat.'
     )
 
 async def set_gender(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -84,12 +113,18 @@ async def set_gender(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     user_id = query.from_user.id
     gender = query.data
     
-    if user_id in user_data:
+    if user_id not in user_data or not user_data[user_id].get('verified', False):
+        await query.edit_message_text('Anda belum terverifikasi. Silakan verifikasi email Anda terlebih dahulu.')
+        return
+    
+    if 'gender' in user_data[user_id]:
         await query.edit_message_text('Anda sudah memilih gender. Kirim /skip untuk mencari pengguna baru atau /endchat untuk mengakhiri.')
         return
 
     nickname = get_new_nickname()
-    user_data[user_id] = {'gender': gender, 'nickname': nickname, 'interests': set()}
+    user_data[user_id]['gender'] = gender
+    user_data[user_id]['nickname'] = nickname
+    user_data[user_id]['interests'] = set()
     
     await query.edit_message_text(
         f'Terima kasih telah memilih. Nama samaran Anda adalah **{nickname}**. '
@@ -153,7 +188,11 @@ async def report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def set_interests(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.message.from_user.id
-    if user_id not in user_data:
+    if user_id not in user_data or not user_data[user_id].get('verified', False):
+        await update.message.reply_text('Anda harus terverifikasi terlebih dahulu. Silakan verifikasi email Anda.')
+        return
+    
+    if 'gender' not in user_data[user_id]:
         await update.message.reply_text('Anda harus memilih gender terlebih dahulu dengan /start.')
         return
     
@@ -167,6 +206,12 @@ async def set_interests(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.message.from_user.id
+    
+    # Jika belum terverifikasi, anggap sebagai input email
+    if user_id not in user_data or not user_data[user_id].get('verified', False):
+        await handle_email(update, context)
+        return
+    
     user_message = update.message.text
     
     if contains_forbidden_words(user_message):
@@ -189,7 +234,7 @@ async def find_chat_partner(user_id: int, context: ContextTypes.DEFAULT_TYPE) ->
         return
 
     user_gender = user_info['gender']
-    opposite_gender = 'male' if user_gender == 'female' else 'female'
+    opposite_gender = 'LAKIK' if user_gender == 'Girlss' else 'Girlss'
     
     if not waiting_users[opposite_gender]:
         await context.bot.send_message(
