@@ -15,7 +15,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
 
-TOKEN = '8082470677:AAHfzr8gihVzqsfnFJ6kQhWXjUAC-Fm5hEk'  # Ganti dengan token bot Anda
+TOKEN = '8082470677:AAHfzr8gihVzqsfnFJ6kQhWXjUAC-Fm5hEk'  
 
 user_data = {}
 waiting_users = {'LAKIK': [], 'Girlss': []}
@@ -28,14 +28,21 @@ FORBIDDEN_WORDS = [
 ]
 
 NICKNAMES = [
-    'PatungKuda', 'GondangHuman', 'PelosokJurbel', 'SumbotBebas', 'BanjarsariTrail', 'Elang', 'Singa', 'Harimau', 'Rusa',
-    'Rubah', 'Koala', 'Kelinci', 'Monyet', 'Bebek', 'Gajah', 'Kuda', 'Ular', 'Buaya', 'Babi',
-    'Semut', 'Lebah', 'Ikan', 'Hiu', 'Paus', 'Lumba-lumba', 'Bintang', 'Bulan', 'Matahari',
-    'Pelangi', 'Awan', 'Hujan', 'Angin', 'Petir', 'Salju', 'Gunung', 'Pantai', 'Laut', 'Sungai',
-    'Danau', 'Hutan', 'Pohon', 'Bunga', 'Mawar', 'Melati', 'Teratai', 'Buku', 'Pensil', 'Meja',
-    'Kursi', 'Lampu', 'Kopi', 'Teh', 'Susu', 'Gula', 'Garam', 'Merica', 'Jahe', 'Kunyit',
-    'Bawang', 'Cabai', 'Kentang', 'Wortel', 'Tomat', 'Apel', 'Jeruk', 'Mangga', 'Durian',
-    'Pisang', 'Nanas', 'Anggur', 'Stroberi', 'Ceri', 'Jambu', 'Kelapa'
+    'PatungKuda', 'GondangHuman', 'PelosokJurbel', 'SumbotBebas', 'BanjarsariTrail', 'JaranImut', 'KucingNgemong', 'AnjingGukguk', 'KelinciLompat', 'HamsterGembul',
+'MonyetCengengesan', 'BebekWaddle', 'KucingManja', 'AnjingKedip', 'KelinciMungil',
+'HamsterNgopi', 'KucingMeong', 'MonyetKecemplung', 'BebekKwek', 'HamsterGulung',
+'JaranKekey', 'KucingGoler', 'AnjingLari', 'KelinciCepol', 'HamsterBuluk',
+'MonyetNgantuk', 'BebekNgedance', 'KucingPulas', 'AnjingGoyang', 'KelinciCilik',
+'HamsterPipi', 'KucingLompat', 'MonyetCakar', 'BebekSemute', 'HamsterKeren',
+'JaranCeria', 'KucingMringis', 'AnjingCium', 'KelinciMakan', 'HamsterBulat',
+'MonyetKonyol', 'BebekGoyang', 'KucingImut', 'AnjingLucu', 'KelinciPipi',
+'HamsterCepat', 'KucingNjem', 'MonyetGendong', 'BebekCiprat', 'HamsterJoget',
+'JaranMungil', 'KucingKepo', 'AnjingGigil', 'KelinciGendut', 'HamsterKecik',
+'MonyetGitel', 'BebekKipas', 'KucingCengir', 'AnjingMeloncat', 'KelinciBuluk',
+'HamsterCiluk', 'KucingGendhem', 'MonyetKetik', 'BebekNari', 'HamsterCute',
+'JaranKedip', 'KucingNunduk', 'AnjingCakar', 'KelinciKeren', 'HamsterMungil',
+'MonyetNgedumel', 'BebekCeria', 'KucingGembul', 'AnjingNongkrong', 'KelinciLucu',
+'HamsterPulas', 'KucingCepol', 'MonyetGoyang', 'BebekMungil', 'HamsterKedip'
 ]
 
 def is_valid_undip_email(email):
@@ -69,12 +76,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 [InlineKeyboardButton("Perempuan", callback_data='Girlss')],
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await update.message.reply_text('Silakan pilih gender Anda untuk memulai.', reply_markup=reply_markup)
+            await update.message.reply_text('Silakan pilih gender', reply_markup=reply_markup)
             return
     
     await update.message.reply_text(
         'Selamat datang di bot chat anonim UNDIP!\n\n'
         'Untuk menggunakan layanan ini, Anda harus memiliki email students.undip.ac.id.\n'
+        'Pastikan untuk tidak membagikan informasi pribadi selama chat.\n'
         'Silakan kirim alamat email students.undip.ac.id Anda untuk verifikasi.'
     )
 
